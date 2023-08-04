@@ -1,0 +1,134 @@
+//this is a microbit code 
+function convertToNetmask (netmask: number) {
+    return "" + (netmask >>> 24) + "." + ((netmask >> 16) & 255) + "." + ((netmask >> 8) & 255) + "." + (netmask & 255)
+}
+function calculateFirstUsableIP (networkAddress: number, netmask: number) {
+    firstUsableIP = (networkAddress & netmask) + 1
+    return "" + ((firstUsableIP >>> 24) & 255) + "." + ((firstUsableIP >>> 16) & 255) + "." + ((firstUsableIP >>> 8) & 255) + "." + ((firstUsableIP & 255) >>> 0)
+}
+input.onButtonPressed(Button.A, function () {
+    if (number_of_blocks < 4) {
+        led.plotBrightness(r % 5, r / 5, 47)
+        r += 1
+        ipList.push(0);
+        f = f / 2
+        if (r == 8) {
+            basic.showLeds(`
+                . # # # .
+                . . # . .
+                . . # . .
+                . . # . .
+                . # # # .
+                `)
+            f = 128
+            basic.showString("" + (block))
+            basic.pause(1000)
+            basic.clearScreen()
+            number_of_blocks += 1
+            block = 0
+            r = 0
+        }
+    }
+})
+function calculateNetmask (network: number) {
+    return 0xFFFFFFFF << (32 - network)
+}
+input.onButtonPressed(Button.B, function () {
+    if (number_of_blocks < 4) {
+        led.plotBrightness(r % 5, r / 5, 255)
+        block += f
+        ipList.push(1);
+        r += 1
+        f = f / 2
+        if (r == 8) {
+            basic.showLeds(`
+                . # # # .
+                . . # . .
+                . . # . .
+                . . # . .
+                . # # # .
+                `)
+            f = 128
+            basic.showString("" + (block))
+            basic.pause(1000)
+            basic.clearScreen()
+            number_of_blocks += 1
+            block = 0
+            r = 0
+        }
+    }
+})
+function binaryListToNumber (binaryArray: any[]) {
+    return parseInt(binaryArray.join(''), 2)
+}
+function calculateNetworkAddress (ipAddress: number, netmask: number) {
+    return "" + ((ipAddress & netmask) >>> 24) + "." + (((ipAddress & netmask) >>> 16) & 255) + "." + (((ipAddress & netmask) >>> 8) & 255) + "." + ((ipAddress & netmask) & 255)
+}
+function calculateLastUsableIP (broadcastAddress: number) {
+    return "" + ((broadcastAddress >>> 24) & 255) + "." + ((broadcastAddress >>> 16) & 255) + "." + ((broadcastAddress >>> 8) & 255) + "." + (((broadcastAddress & 255) >>> 0) - 1)
+}
+function calculateBroadcastAddress (networkAddress: number, netmask: number) {
+    return networkAddress | ~netmask
+}
+let netmask2 = 0
+let block = 0
+let firstUsableIP = 0
+let number_of_blocks = 0
+let r = 0
+let f = 0
+let ipList: number[] = []
+let netmask = 0
+let network = 0
+let binaryString = ""
+let ipAddress = 0
+let networkAddress = 0
+let broadcastAddress = 0
+f = 128
+r = 0
+number_of_blocks = 0
+basic.forever(function () {
+    if (number_of_blocks == 4) {
+        network = 0
+        basic.showLeds(`
+            . . . . #
+            . . . # .
+            # . # . .
+            . # . . .
+            . . . . .
+            `)
+        while (!(input.buttonIsPressed(Button.AB))) {
+            if (input.buttonIsPressed(Button.A)) {
+                network += 1
+                basic.showString("" + (network))
+                if (32 < network) {
+                    network = 32
+                }
+            }
+            if (input.buttonIsPressed(Button.B)) {
+                network += -1
+                basic.showString("" + (network))
+                if (1 > network) {
+                    network = 1
+                }
+            }
+            if (input.isGesture(Gesture.Shake)) {
+                network = 24
+            }
+        }
+        basic.showString("" + (network))
+        basic.pause(5000)
+        basic.showString("Hosts:")
+        basic.showNumber(2 ** (32 - network) - 2)
+        basic.pause(2000)
+        basic.clearScreen()
+        basic.showString("Netmask:")
+        netmask2 = calculateNetmask(network)
+        basic.showString("" + (convertToNetmask(netmask2)))
+        let binaryIP = ipList.join('')
+ipAddress = binaryListToNumber(ipList)
+        basic.showString("Network adress:")
+        basic.showString("" + (calculateNetworkAddress(ipAddress, netmask)))
+        basic.showString("Brodcast:")
+        basic.showString("" + (convertToNetmask(calculateBroadcastAddress(networkAddress, netmask))))
+    }
+})
